@@ -22,11 +22,19 @@ def timeit(f):
     return timed
 
 
-def get_html_soup():
-    response = requests.get("http://localhost/index.html")
+def get_html_soup(headers=None):
+    if not headers:
+        headers = {}
+    response = requests.get("http://localhost/index.html", headers=headers)
     if response.status_code != OK:
         raise Exception()
     return BeautifulSoup(response.text)
+
+
+def get_new_html_soup():
+    return get_html_soup(headers={
+        'new-cache-enabled': 'true'
+    })
 
 
 @dataclasses.dataclass
@@ -40,8 +48,9 @@ def get_object_links(soup: BeautifulSoup):
     return [
         Link(
             key=("http://localhost" if img.get("src").startswith("/") else "") + (img.get("src")),
-            last_modified=datetime.datetime.strptime(img.get('last-modified', str(datetime.datetime.now())),
-                                                     "%Y-%m-%d %H:%M:%S.%f")
+            last_modified=datetime.datetime.strptime(
+                img.get('last-modified', str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))),
+                "%Y-%m-%d %H:%M:%S")
         )
         for img in imgs
     ]
@@ -54,13 +63,12 @@ def resolve_links(resolver: ObjectResolver, links: List[Link]):
 
 
 if __name__ == '__main__':
+    # browser cache
     html = get_html_soup()
     links = get_object_links(html)
 
     browser_cache = BrowserCache()
     new_cache = NewCache()
-
-    # browser cache
 
     # first resolving
     resolve_links(browser_cache, links)
@@ -68,6 +76,8 @@ if __name__ == '__main__':
     resolve_links(browser_cache, links)
 
     # new cache
+    html = get_new_html_soup()
+    links = get_object_links(html)
 
     # first resolving
     resolve_links(new_cache, links)

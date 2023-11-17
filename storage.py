@@ -20,10 +20,19 @@ class ObjectResolver(ABC):
 
 
 class BrowserCache(ObjectResolver):
+    def __init__(self):
+        self.etag_storage = {}
+
     def resolve(self, key: str, **kwargs):
-        response = requests.get(key)
+        etag = self.etag_storage.get(key, '')
+        response = requests.get(key, headers={
+            'If-None-Match': etag,
+        })
         if response.status_code not in (NOT_MODIFIED, OK):
             raise Exception()
+        etag: str = response.headers.get('etag')
+        if etag:
+            self.etag_storage[key] = etag
 
 
 class NewCache(ObjectResolver):
