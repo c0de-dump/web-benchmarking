@@ -1,7 +1,6 @@
 import enum
 import os
 import subprocess
-from _hashlib import openssl_sha1
 from typing import List
 
 CACHE_CONTROL = "cache-control"
@@ -101,7 +100,7 @@ def is_heuristic_cache(headers: dict):
 
 def get_cache_control_values(val: str):
     output = {}
-    cache_controls = val.split(", ")
+    cache_controls = val.replace(" ", "").split(",")
     for ctrl in cache_controls:
         if '=' in ctrl:
             key, value = ctrl.split("=")
