@@ -4,12 +4,21 @@ import subprocess
 from _hashlib import openssl_sha1
 from typing import List
 
+CACHE_CONTROL = "cache-control"
+LAST_MODIFIED = "last-modified"
+EXPIRES = "expires"
+ETAG = "etag"
+NO_STORE = "no-store"
+NO_CACHE = "no-cache"
+MAX_AGE = "max-age"
+
 
 def get_website_list():
     return [
         # "https://bbc.com",
         # "https://cnn.com",
-        "https://fararu.com"
+        "https://fararu.com",
+        "https://khabaronline.ir",
     ]
 
 
@@ -29,10 +38,10 @@ def get_whole_page(output_dir, website: str):
 
 
 CACHE_HEADERS = (
-    "cache-control",
-    "last-modified",
-    "expires",
-    "etag",
+    CACHE_CONTROL,
+    LAST_MODIFIED,
+    EXPIRES,
+    ETAG,
 )
 
 
@@ -45,69 +54,88 @@ class ObjectHeaderGroup(enum.Enum):
     UNKNOWN = 6
 
 
-def is_without_cache_headers(headers: List[str]):
+def is_without_cache_headers(headers: dict):
     for header in headers:
-        if ": " not in header:
-            continue
-        key, value = header.split(": ", maxsplit=1)
-        if key.lower() in CACHE_HEADERS:
+        if header in CACHE_HEADERS:
             return False
     return True
 
 
-def is_should_not_cache(headers: List[str]):
+def is_should_not_cache(headers: dict):
+    cache_control = headers.get(CACHE_CONTROL)
+    if not cache_control:
+        return False
+    return cache_control.get(NO_STORE) is not None
+
+
+def is_revalidate_cache(headers: dict):
+    cache_control = headers.get(CACHE_CONTROL)
+    if not cache_control:
+        return False
+
+    max_age = cache_control.get(MAX_AGE)
+    no_cache = cache_control.get(NO_CACHE)
+    no_store = cache_control.get(NO_STORE)
+
+    return no_store is None and (no_cache is not None or (max_age and int(max_age) == 0))
+
+
+def is_should_cache(headers: dict):
+    cache_control = headers.get(CACHE_CONTROL)
+    if not cache_control:
+        return False
+
+    max_age = cache_control.get(MAX_AGE)
+    no_cache = cache_control.get(NO_CACHE)
+    no_store = cache_control.get(NO_STORE)
+
+    return no_cache is None and no_store is None and max_age and int(max_age) > 0
+
+
+def is_heuristic_cache(headers: dict):
+    cache_control = headers.get(CACHE_CONTROL)
+    last_modified = headers.get(LAST_MODIFIED)
+
+    return cache_control is None and last_modified is not None
+
+
+def get_cache_control_values(val: str):
+    output = {}
+    cache_controls = val.split(", ")
+    for ctrl in cache_controls:
+        if '=' in ctrl:
+            key, value = ctrl.split("=")
+            output[key] = value
+        else:
+            output[ctrl] = {}
+    return output
+
+
+def elicit_headers(headers: List[str]):
+    output = {}
     for header in headers:
-        key, value = header.split(": ", maxsplit=1)
-        if key.lower() == 'cache-control':
-            return 'no-store' in value.lower()
-    return False
-
-
-def is_revalidate_cache(headers: List[str]):
-    for header in headers:
-        key, value = header.split(": ", maxsplit=1)
-        if key.lower() == 'cache-control':
-            return 'no-store' not in value.lower() and \
-                   ('no-cache' in value.lower() or 'max-age=0' in value.lower().replace(" ",
-                                                                                        ""))  # TODO: Is it possible max-age=0123 ?
-    return False
-
-
-def is_should_cache(headers: List[str]):
-    for header in headers:
-        key, value = header.split(": ", maxsplit=1)
-        if key.lower() == 'cache-control':
-            return 'no-cache' not in value.lower() and \
-                   'no-store' not in value.lower() and \
-                   'max-age' in value.lower() and \
-                   'max-age=0' not in value.lower().replace(" ", "")
-    return False
-
-
-def is_heuristic_cache(headers: List[str]):
-    for header in headers:
-        key, value = header.split(": ", maxsplit=1)
-        if key.lower() == 'cache-control':
-            return False
-
-    for header in headers:
-        key, value = header.split(": ", maxsplit=1)
-        if key.lower() in ('cache-control', 'expires'):
-            return True
-
-    return False
+        if ":" not in header:
+            continue
+        key, value = header.split(": ")
+        if key == CACHE_CONTROL:
+            output[CACHE_CONTROL] = get_cache_control_values(value)
+        elif key in (LAST_MODIFIED, EXPIRES, ETAG):
+            output[key] = value
+    return output
 
 
 def parse_object_headers(headers: List[str]):
-    if is_without_cache_headers(headers):
+    headers = [header.lower() for header in headers]
+    normalized_headers = elicit_headers(headers)
+    if is_without_cache_headers(normalized_headers):
         return ObjectHeaderGroup.WITHOUT_CACHE_HEADERS
-    elif is_should_not_cache(headers):
+    elif is_should_not_cache(normalized_headers):
         return ObjectHeaderGroup.SHOULD_NOT_CACHE
-    elif is_revalidate_cache(headers):
+    elif is_revalidate_cache(normalized_headers):
         return ObjectHeaderGroup.REVALIDATE_BEFORE_USING
-    elif is_should_cache(headers):
+    elif is_should_cache(normalized_headers):
         return ObjectHeaderGroup.SHOULD_CACHE
-    elif is_heuristic_cache(headers):
+    elif is_heuristic_cache(normalized_headers):
         return ObjectHeaderGroup.HEURISTIC_CACHE
 
     return ObjectHeaderGroup.UNKNOWN
