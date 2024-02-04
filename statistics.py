@@ -3,6 +3,10 @@ import os
 import subprocess
 from typing import List
 
+import numpy as np
+from matplotlib import pyplot as plt
+from scipy import interpolate
+
 CACHE_CONTROL = "cache-control"
 LAST_MODIFIED = "last-modified"
 EXPIRES = "expires"
@@ -140,11 +144,33 @@ def parse_object_headers(headers: List[str]):
     return ObjectHeaderGroup.UNKNOWN
 
 
-def parse_file(path: str):
-    with open(path, "rb", encoding=None) as f:
-        return parse_object_headers(
-            f.read().decode('unicode_escape', errors='ignore').split('\r\n\r\n')[0].split("\r\n")[1:]
-        )
+def get_max_age(headers: List[str]):
+    headers = [header.lower() for header in headers]
+    normalized_headers = elicit_headers(headers)
+    return normalized_headers.get(CACHE_CONTROL, {}).get(MAX_AGE)
+
+def smooth_output(xs, ys):
+    bspline = interpolate.make_interp_spline(xs, ys)
+    x_new = np.linspace(min(xs), max(xs), 100)
+    y_new = bspline(x_new)
+    return x_new, y_new
+
+def plot_max_age_cdf(max_age_count: dict):
+    pair_max_age_and_count = [(max_age, count) for max_age, count in max_age_count.items()]
+    pair_max_age_and_count.sort(key=lambda item: item[0])
+    sum_count = sum(pair[1] for pair in pair_max_age_and_count)
+
+    pair_max_age_and_probability = [(max_age, count / sum_count) for max_age, count in pair_max_age_and_count]
+    cumulative_probability = 0
+    for i in range(len(pair_max_age_and_probability)):
+        cumulative_probability += pair_max_age_and_probability[i][1]
+        pair_max_age_and_probability[i] = (pair_max_age_and_probability[i][0], cumulative_probability)
+
+    xs = list(map(lambda pair: pair[0], pair_max_age_and_probability))
+    ys = list(map(lambda pair: pair[1], pair_max_age_and_probability))
+    plt.xticks(ticks=xs, rotation=90)
+    plt.plot(xs, ys)
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -157,13 +183,24 @@ if __name__ == '__main__':
         ObjectHeaderGroup.HEURISTIC_CACHE: 0,
         ObjectHeaderGroup.UNKNOWN: 0,
     }
+    max_age_count = {}
     for website in get_website_list():
         dir_name = website.replace("/", "_")
-        get_whole_page(dir_name, website)
+        # get_whole_page(dir_name, website)
 
         for name in os.listdir(dir_name):
             path = f"{dir_name}/{name}"
             if not os.path.isfile(path):
                 continue
-            counts[parse_file(path)] += 1
+            with open(path, "rb", encoding=None) as f:
+                headers = f.read().decode('unicode_escape', errors='ignore').split('\r\n\r\n')[0].split("\r\n")[1:]
+            cache_type = parse_object_headers(headers)
+            counts[cache_type] += 1
+            if cache_type == ObjectHeaderGroup.SHOULD_CACHE:
+                max_age = int(get_max_age(headers))
+                max_age_count[max_age] = max_age_count.get(max_age, 0) + 1
+
     print(counts)
+    plot_max_age_cdf(max_age_count)
+
+# {31536000: 98, 900: 3, 10800: 2, 2592000: 173, 180: 1}
