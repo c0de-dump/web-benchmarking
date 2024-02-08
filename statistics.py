@@ -3,9 +3,7 @@ import os
 import subprocess
 from typing import List
 
-import numpy as np
 from matplotlib import pyplot as plt
-from scipy import interpolate
 
 CACHE_CONTROL = "cache-control"
 LAST_MODIFIED = "last-modified"
@@ -18,8 +16,8 @@ MAX_AGE = "max-age"
 
 def get_website_list():
     return [
-        # "https://bbc.com",
-        # "https://cnn.com",
+        "https://bbc.com",
+        "https://cnn.com",
         "https://fararu.com",
         "https://khabaronline.ir",
     ]
@@ -149,11 +147,6 @@ def get_max_age(headers: List[str]):
     normalized_headers = elicit_headers(headers)
     return normalized_headers.get(CACHE_CONTROL, {}).get(MAX_AGE)
 
-def smooth_output(xs, ys):
-    bspline = interpolate.make_interp_spline(xs, ys)
-    x_new = np.linspace(min(xs), max(xs), 100)
-    y_new = bspline(x_new)
-    return x_new, y_new
 
 def plot_max_age_cdf(max_age_count: dict):
     pair_max_age_and_count = [(max_age, count) for max_age, count in max_age_count.items()]
@@ -170,10 +163,17 @@ def plot_max_age_cdf(max_age_count: dict):
     ys = list(map(lambda pair: pair[1], pair_max_age_and_probability))
     plt.xticks(ticks=xs, rotation=90)
     plt.plot(xs, ys)
-    plt.show()
+    plt.savefig(fname='max-age-cdf.jpg')
 
 
-if __name__ == '__main__':
+def save_kv_file(data: dict, path):
+    header = ','.join(map(str, data.keys()))
+    row = ','.join(map(str, data.values()))
+    with open(path, 'w+') as f:
+        f.write('\n'.join((header, row)))
+
+
+def do_statistics(web_sites):
     # TODO: handle not 2xx responses
     counts = {
         ObjectHeaderGroup.WITHOUT_CACHE_HEADERS: 0,
@@ -184,9 +184,9 @@ if __name__ == '__main__':
         ObjectHeaderGroup.UNKNOWN: 0,
     }
     max_age_count = {}
-    for website in get_website_list():
+    for website in web_sites:
         dir_name = website.replace("/", "_")
-        # get_whole_page(dir_name, website)
+        get_whole_page(dir_name, website)
 
         for name in os.listdir(dir_name):
             path = f"{dir_name}/{name}"
@@ -197,10 +197,14 @@ if __name__ == '__main__':
             cache_type = parse_object_headers(headers)
             counts[cache_type] += 1
             if cache_type == ObjectHeaderGroup.SHOULD_CACHE:
-                max_age = int(get_max_age(headers))
-                max_age_count[max_age] = max_age_count.get(max_age, 0) + 1
+                max_age_seconds = int(get_max_age(headers))
+                max_age_days = int(max_age_seconds / 60 / 60 / 24)
+                max_age_count[max_age_days] = max_age_count.get(max_age_days, 0) + 1
 
-    print(counts)
+    save_kv_file(counts, 'counts.csv')
+    save_kv_file(max_age_count, 'max_age_count.csv')
     plot_max_age_cdf(max_age_count)
 
-# {31536000: 98, 900: 3, 10800: 2, 2592000: 173, 180: 1}
+
+if __name__ == '__main__':
+    do_statistics(get_website_list())
