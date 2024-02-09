@@ -22,6 +22,8 @@ def get_whole_page(output_dir, website: str):
             "wget",
             "--timeout=10",
             "--tries=3",
+            "-U"
+            "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0",
             "-E",
             "-H",
             "-p",
