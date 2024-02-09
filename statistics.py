@@ -110,7 +110,7 @@ def elicit_headers(headers: List[str]):
     for header in headers:
         if ":" not in header:
             continue
-        key, value = header.split(": ")
+        key, value = header.split(": ", maxsplit=1)
         if key == CACHE_CONTROL:
             output[CACHE_CONTROL] = get_cache_control_values(value)
         elif key in (LAST_MODIFIED, EXPIRES, ETAG):
