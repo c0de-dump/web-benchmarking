@@ -20,6 +20,8 @@ def get_whole_page(output_dir, website: str):
     subprocess.run(
         [
             "wget",
+            "--timeout=10",
+            "--tries=3",
             "-E",
             "-H",
             "-p",
