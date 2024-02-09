@@ -17,6 +17,7 @@ MAX_AGE = "max-age"
 
 
 def get_whole_page(output_dir, website: str):
+    TIMEOUT = 2 * 60
     subprocess.run(
         [
             "wget",
@@ -32,7 +33,7 @@ def get_whole_page(output_dir, website: str):
             "-P",
             output_dir,
             website,
-        ])
+        ], timeout=TIMEOUT)
 
 
 CACHE_HEADERS = (
@@ -191,7 +192,11 @@ def do_statistics(web_sites):
     os.mkdir("downloads")
     for website in web_sites:
         dir_name = "downloads/" + website.replace("/", "_")
-        get_whole_page(dir_name, website)
+        try:
+            get_whole_page(dir_name, website)
+        except subprocess.TimeoutExpired:
+            logger.error(f"Timeout in fetch {website}")
+            continue
         if not os.path.exists(dir_name):
             logger.error(f"Failed to fetch {website}")
             continue
