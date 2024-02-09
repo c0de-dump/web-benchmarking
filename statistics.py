@@ -101,6 +101,8 @@ def is_heuristic_cache(headers: dict):
 
 def get_cache_control_values(val: str):
     output = {}
+    if ";" in val:
+        val = val.replace(";", ",")
     if "," in val:
         cache_controls = val.replace(" ", "").split(",")
     else:
@@ -187,6 +189,7 @@ def do_statistics(web_sites):
         ObjectHeaderGroup.SHOULD_CACHE: 0,
         ObjectHeaderGroup.HEURISTIC_CACHE: 0,
         ObjectHeaderGroup.UNKNOWN: 0,
+        ObjectHeaderGroup.EXCEPTIONAL: 0,
     }
     max_age_count = {}
     os.mkdir("downloads")
