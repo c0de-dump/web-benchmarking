@@ -168,7 +168,7 @@ def save_kv_file(data: dict, path):
         f.write('\n'.join((header, row)))
 
 
-logging.basicConfig(filename='stats.log', level=logging.ERROR)
+logging.basicConfig(filename='stats.log', filemode='w', level=logging.ERROR)
 logger = logging.getLogger(__name__)
 
 
@@ -182,8 +182,9 @@ def do_statistics(web_sites):
         ObjectHeaderGroup.UNKNOWN: 0,
     }
     max_age_count = {}
+    os.mkdir("downloads")
     for website in web_sites:
-        dir_name = website.replace("/", "_")
+        dir_name = "downloads/" + website.replace("/", "_")
         get_whole_page(dir_name, website)
         if not os.path.exists(dir_name):
             logger.error(f"Failed to fetch {website}")
