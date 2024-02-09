@@ -48,6 +48,7 @@ class ObjectHeaderGroup(enum.Enum):
     SHOULD_CACHE = 4
     HEURISTIC_CACHE = 5
     UNKNOWN = 6
+    EXCEPTIONAL = 7
 
 
 def is_without_cache_headers(headers: dict):
@@ -97,7 +98,10 @@ def is_heuristic_cache(headers: dict):
 
 def get_cache_control_values(val: str):
     output = {}
-    cache_controls = val.replace(" ", "").split(",")
+    if "," in val:
+        cache_controls = val.replace(" ", "").split(",")
+    else:
+        cache_controls = val.split(" ")
     for ctrl in cache_controls:
         if '=' in ctrl:
             key, value = ctrl.split("=")
@@ -195,7 +199,12 @@ def do_statistics(web_sites):
                 continue
             with open(path, "rb", encoding=None) as f:
                 headers = f.read().decode('unicode_escape', errors='ignore').split('\r\n\r\n')[0].split("\r\n")[1:]
-            cache_type = parse_object_headers(headers)
+            try:
+                cache_type = parse_object_headers(headers)
+            except Exception as e:
+                logger.error("Failed to parse headers for file %s with error %s. with headers\n%s", website, str(e),
+                             headers)
+                cache_type = ObjectHeaderGroup.EXCEPTIONAL
             counts[cache_type] += 1
             if cache_type == ObjectHeaderGroup.SHOULD_CACHE:
                 max_age_seconds = int(get_max_age(headers))
