@@ -4,6 +4,7 @@ import subprocess
 from typing import List
 
 from matplotlib import pyplot as plt
+import alexa
 
 CACHE_CONTROL = "cache-control"
 LAST_MODIFIED = "last-modified"
@@ -12,15 +13,6 @@ ETAG = "etag"
 NO_STORE = "no-store"
 NO_CACHE = "no-cache"
 MAX_AGE = "max-age"
-
-
-def get_website_list():
-    return [
-        "https://bbc.com",
-        "https://cnn.com",
-        "https://fararu.com",
-        "https://khabaronline.ir",
-    ]
 
 
 def get_whole_page(output_dir, website: str):
@@ -174,7 +166,6 @@ def save_kv_file(data: dict, path):
 
 
 def do_statistics(web_sites):
-    # TODO: handle not 2xx responses
     counts = {
         ObjectHeaderGroup.WITHOUT_CACHE_HEADERS: 0,
         ObjectHeaderGroup.SHOULD_NOT_CACHE: 0,
@@ -207,4 +198,4 @@ def do_statistics(web_sites):
 
 
 if __name__ == '__main__':
-    do_statistics(get_website_list())
+    do_statistics(alexa.get_websites())
