@@ -64,7 +64,7 @@ class Statistics:
                     logger.error("Unable to get max of http_object %s", str(http_object))
                     cache_type_counts[ObjectHeaderGroup.EXCEPTIONAL] += 1
                     continue
-                max_age_hours = int(max_age_seconds / 60 / 60 / 24)
+                max_age_hours = int(max_age_seconds / 60 / 60)
                 max_age_count[max_age_hours] = max_age_count.get(max_age_hours, 0) + 1
         logger.info("Statistics Done. Saving files...")
         save_kv_file(cache_type_counts, 'counts.csv')
