@@ -19,6 +19,7 @@ class Statistics:
         http_objects: List[HTTPObject] = []
         exception_count = 0
         for root_path in to_parse_paths:
+            logger.info("Exporting http_objects of %s", root_path)
             for path in os.listdir(root_path):
                 path = f"{root_path}/{path}"
                 with open(path, "rb", encoding=None) as f:
@@ -34,9 +35,13 @@ class Statistics:
         return http_objects, exception_count
 
     def do(self):
+        logger.info("Resolving directories...")
         to_parse_paths = self.directory_resolver.resolve()
+        logger.info("Directories resolved!")
 
+        logger.info("Parsing and get http objects...")
         http_objects, exception_count = self._get_all_http_objects(to_parse_paths)
+        logger.info("Http objects parsed!")
 
         cache_type_counts = {
             ObjectHeaderGroup.WITHOUT_CACHE_HEADERS: 0,
@@ -48,6 +53,7 @@ class Statistics:
             ObjectHeaderGroup.EXCEPTIONAL: exception_count,
         }
         max_age_count = {}
+        logger.info("Doing some statistics...")
         for http_object in http_objects:
             cache_type_counts[http_object.get_type()] += 1
 
@@ -60,6 +66,8 @@ class Statistics:
                     continue
                 max_age_hours = int(max_age_seconds / 60 / 60 / 24)
                 max_age_count[max_age_hours] = max_age_count.get(max_age_hours, 0) + 1
+        logger.info("Statistics Done. Saving files...")
         save_kv_file(cache_type_counts, 'counts.csv')
         save_kv_file(max_age_count, 'max_age_count.csv')
         plot_max_age_cdf(max_age_count)
+        logger.info("Bye Bye!")

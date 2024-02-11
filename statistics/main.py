@@ -13,7 +13,7 @@ website_list_providers = {
     "static": StaticWebsiteList,
 }
 
-logging.basicConfig(filename='stats.log', filemode='w', level=logging.ERROR)
+logging.basicConfig(filename='stats.log', filemode='w', level=logging.INFO)
 
 
 def get_downloader_resolver(path: str, website_list_provider: SiteList):
