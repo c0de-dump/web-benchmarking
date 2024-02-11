@@ -30,12 +30,12 @@ def plot_max_age_cdf(max_age_count_hours: dict):
     max_age_count_days = {}
     for hour, count in max_age_count_hours.items():
         days = hour // 24
-        max_age_count_days[days] = max_age_count_days.get(days, 0) + 1
+        max_age_count_days[days] = max_age_count_days.get(days, 0) + count
 
     pair_max_age_and_probability_days = calc_cdf(max_age_count_days)
     pair_max_age_and_probability_hours = calc_cdf(lower_than_24_hours)
 
-    fig, (one_day_scale, one_month_scale, one_year_scale, all_history) = plt.subplots(4, 1, figsize=(6, 10))
+    fig, (one_day_scale, one_month_scale, one_year_scale, all_history) = plt.subplots(4, 1, figsize=(6, 12))
 
     zero_day_probability = pair_max_age_and_probability_days[0][1]
     day_pairs = list(map(lambda pair: (pair[0], pair[1] * zero_day_probability), pair_max_age_and_probability_hours))
