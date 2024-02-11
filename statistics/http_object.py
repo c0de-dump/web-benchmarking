@@ -41,7 +41,12 @@ class HTTPObject:
         return output
 
     def get_max_age(self):
-        return int(self.headers_dict.get(CACHE_CONTROL).get(MAX_AGE))
+        max_age = self.headers_dict.get(CACHE_CONTROL).get(MAX_AGE)
+        if max_age is None:
+            return None
+
+        max_age = max_age.replace("s", "")  # some max ages has 's' for showing seconds
+        return int(max_age)
 
     def is_without_cache_headers(self):
         for header in self.headers_dict:
@@ -60,7 +65,7 @@ class HTTPObject:
         if not cache_control:
             return False
 
-        max_age = cache_control.get(MAX_AGE)
+        max_age = self.get_max_age()
         no_cache = cache_control.get(NO_CACHE)
         no_store = cache_control.get(NO_STORE)
 
@@ -71,7 +76,7 @@ class HTTPObject:
         if not cache_control:
             return False
 
-        max_age = cache_control.get(MAX_AGE)
+        max_age = self.get_max_age()
         no_cache = cache_control.get(NO_CACHE)
         no_store = cache_control.get(NO_STORE)
 
