@@ -7,6 +7,7 @@ from consts import CACHE_CONTROL, LAST_MODIFIED, EXPIRES, ETAG, CACHE_HEADERS, N
 class HTTPObject:
     def __init__(self, headers: List[str]):
         self.headers_dict = self._elicit_headers(headers)
+        self.type = self._get_type()
 
     @classmethod
     def _elicit_headers(cls, headers: List[str]):
@@ -82,7 +83,7 @@ class HTTPObject:
 
         return cache_control is None and last_modified is not None
 
-    def get_type(self):
+    def _get_type(self):
         if self.is_without_cache_headers():
             return ObjectHeaderGroup.WITHOUT_CACHE_HEADERS
         elif self.is_should_not_cache():

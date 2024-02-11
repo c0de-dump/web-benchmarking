@@ -55,7 +55,7 @@ class Statistics:
         max_age_count = {}
         logger.info("Doing some statistics...")
         for http_object in http_objects:
-            cache_type_counts[http_object.get_type()] += 1
+            cache_type_counts[http_object.type] += 1
 
             if http_object.is_should_cache():
                 try:
