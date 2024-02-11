@@ -26,6 +26,7 @@ class HTTPObject:
     @classmethod
     def _get_cache_control_values(cls, val: str):
         output = {}
+        val = val.replace("= ", "=").replace(" =", "=")
         if ";" in val:
             val = val.replace(";", ",")
         if "," in val:
@@ -42,7 +43,7 @@ class HTTPObject:
 
     def get_max_age(self):
         max_age = self.headers_dict.get(CACHE_CONTROL).get(MAX_AGE)
-        if max_age is None:
+        if not max_age:
             return None
 
         max_age = max_age.replace("s", "")  # some max ages has 's' for showing seconds
