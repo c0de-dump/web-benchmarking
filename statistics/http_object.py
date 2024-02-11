@@ -70,7 +70,7 @@ class HTTPObject:
         no_cache = cache_control.get(NO_CACHE)
         no_store = cache_control.get(NO_STORE)
 
-        return no_store is None and (no_cache is not None or (max_age and int(max_age) == 0))
+        return no_store is None and (no_cache is not None or (max_age is not None and int(max_age) == 0))
 
     def is_should_cache(self):
         cache_control = self.headers_dict.get(CACHE_CONTROL)
@@ -81,7 +81,7 @@ class HTTPObject:
         no_cache = cache_control.get(NO_CACHE)
         no_store = cache_control.get(NO_STORE)
 
-        return no_cache is None and no_store is None and max_age and int(max_age) > 0
+        return no_cache is None and no_store is None and max_age is not None and int(max_age) > 0
 
     def is_heuristic_cache(self):
         cache_control = self.headers_dict.get(CACHE_CONTROL)
