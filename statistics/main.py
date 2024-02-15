@@ -4,7 +4,7 @@ import os.path
 
 from site_list_providers import AlexaScraperSiteList, StaticWebsiteList
 from directory_resolver import WalkerDirectoryResolver, DownloaderDirectoryResolver
-from downloader import Wget
+from downloader import Wget, AsyncWget
 from interfaces import SiteList
 from stats import Statistics
 
@@ -14,6 +14,10 @@ website_list_providers = {
 }
 
 logging.basicConfig(filename='stats.log', filemode='w', level=logging.INFO)
+
+
+def get_async_downloader_resolver(path: str, website_list_provider: SiteList):
+    return DownloaderDirectoryResolver(AsyncWget(path), website_list_provider)
 
 
 def get_downloader_resolver(path: str, website_list_provider: SiteList):
@@ -27,7 +31,7 @@ def get_walker_resolver(path: str):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("resolver", help=f"Provide resolver.",
-                        choices=("walker", "downloader"))
+                        choices=("walker", "downloader", "adownloader"))
     parser.add_argument("-p", "--path", help="Root path to store and read site objects.")
     parser.add_argument("-wl", "--website-lister",
                         help="Should provider when resolver set to downloader."
@@ -41,9 +45,15 @@ def main():
     if not os.path.exists(path):
         os.mkdir(path)
 
-    if args.resolver == "downloader":
+    if args.resolver in ("downloader", "adownloader"):
         provider_class = website_list_providers[args.website_lister]
-        resolver = get_downloader_resolver(path, provider_class())
+        if args.resolver == "downloader":
+            resolver = get_downloader_resolver(path, provider_class())
+        elif args.resolver == "adownloader":
+            resolver = get_async_downloader_resolver(path, provider_class())
+        else:
+            raise Exception("Unhandled exception in finding proper downloader occurred.")
+
     elif args.resolver == "walker":
         resolver = get_walker_resolver(path)
     else:

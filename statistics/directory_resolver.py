@@ -1,3 +1,4 @@
+import asyncio
 import os
 from typing import List
 
@@ -6,19 +7,31 @@ from interfaces import DirectoryPathsResolver, Downloader, SiteList
 
 
 class DownloaderDirectoryResolver(DirectoryPathsResolver):
-    def __init__(self, downloader: Downloader, site_list: SiteList):
+    def __init__(self, downloader: Downloader, site_list: SiteList, workers=2):
         self.downloader = downloader
         self.site_list = site_list
+        self.workers = workers
+        self.iter = self.get_list()
 
-    def resolve(self) -> List[str]:
-        sites = []
-        for website in self.site_list.get_list():
+    def get_list(self):
+        yield from self.site_list.get_list()
+
+    async def _resolve(self, q: List):
+        for website in self.iter:
             try:
-                dir_name = self.downloader.download(website)
+                dir_name = await self.downloader.download(website)
             except DownloadFailedException:
                 continue
-            sites.append(dir_name)
-        return sites
+            q.append(dir_name)
+
+    async def _gather(self, q: List):
+        tasks = (self._resolve(q) for _ in range(self.workers))
+        await asyncio.gather(*tasks)
+
+    def resolve(self) -> List[str]:
+        q = []
+        asyncio.run(self._gather(q))
+        return q
 
 
 class WalkerDirectoryResolver(DirectoryPathsResolver):

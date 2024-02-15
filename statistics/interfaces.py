@@ -8,7 +8,7 @@ class SiteList(metaclass=abc.ABCMeta):
 
 
 class Downloader(metaclass=abc.ABCMeta):
-    def download(self, url: str) -> str:
+    async def download(self, url: str) -> str:
         raise NotImplementedError
 
 

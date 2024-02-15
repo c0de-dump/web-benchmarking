@@ -36,4 +36,6 @@ class StaticWebsiteList(SiteList):
         return [
             "https://fararu.com",
             "https://varzesh3.com",
+            "https://google.com",
+            "https://microsoft.com",
         ]
