@@ -1,12 +1,14 @@
 import asyncio
 import os
-from typing import List
+from typing import List, Tuple
 
 from exceptions import DownloadFailedException
-from interfaces import DirectoryPathsResolver, Downloader, SiteList
+from interfaces import HTTPObjectResolver, Downloader, SiteList
+from http_object import HTTPObject
+from utils import get_http_objects_from_paths
 
 
-class DownloaderDirectoryResolver(DirectoryPathsResolver):
+class DownloaderObjectResolver(HTTPObjectResolver):
     def __init__(self, downloader: Downloader, site_list: SiteList, workers=2):
         self.downloader = downloader
         self.site_list = site_list
@@ -28,15 +30,16 @@ class DownloaderDirectoryResolver(DirectoryPathsResolver):
         tasks = (self._resolve(q) for _ in range(self.workers))
         await asyncio.gather(*tasks)
 
-    def resolve(self) -> List[str]:
+    def resolve(self) -> Tuple[List[HTTPObject], int]:
         q = []
         asyncio.run(self._gather(q))
-        return q
+        return get_http_objects_from_paths(q)
 
 
-class WalkerDirectoryResolver(DirectoryPathsResolver):
+class WalkerDirectoryResolver(HTTPObjectResolver):
     def __init__(self, root_download_path: str):
         self.root_download_path = root_download_path
 
-    def resolve(self) -> List[str]:
-        return [f"{self.root_download_path}/{dir}" for dir in os.listdir(self.root_download_path)]
+    def resolve(self) -> Tuple[List[HTTPObject], int]:
+        return get_http_objects_from_paths(
+            [f"{self.root_download_path}/{dir}" for dir in os.listdir(self.root_download_path)])

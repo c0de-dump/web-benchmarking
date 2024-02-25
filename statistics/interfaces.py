@@ -12,6 +12,6 @@ class Downloader(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
 
-class DirectoryPathsResolver(metaclass=abc.ABCMeta):
+class HTTPObjectResolver(metaclass=abc.ABCMeta):
     def resolve(self) -> List[str]:
         raise NotImplementedError

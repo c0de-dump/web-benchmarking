@@ -4,44 +4,20 @@ from typing import List, Tuple
 
 from consts import ObjectHeaderGroup
 from http_object import HTTPObject
-from interfaces import DirectoryPathsResolver
+from interfaces import HTTPObjectResolver
 from utils import save_kv_file, plot_max_age_cdf
 
 logger = logging.getLogger(__name__)
 
 
 class Statistics:
-    def __init__(self, directory_resolver: DirectoryPathsResolver):
-        self.directory_resolver = directory_resolver
-
-    @classmethod
-    def _get_all_http_objects(cls, to_parse_paths) -> Tuple[List[HTTPObject], int]:
-        http_objects: List[HTTPObject] = []
-        exception_count = 0
-        for root_path in to_parse_paths:
-            logger.info("Exporting http_objects of %s", root_path)
-            for path in os.listdir(root_path):
-                path = f"{root_path}/{path}"
-                with open(path, "rb", encoding=None) as f:
-                    headers = f.read().decode('unicode_escape', errors='ignore').split('\r\n\r\n')[0].split("\r\n")[1:]
-                try:
-                    http_object = HTTPObject(headers)
-                except Exception as e:
-                    logger.error("Failed to parse headers for file %s with error %s. with headers\n%s", path, str(e),
-                                 headers)
-                    exception_count += 1
-                    continue
-                http_objects.append(http_object)
-        return http_objects, exception_count
+    def __init__(self, http_object_resolver: HTTPObjectResolver):
+        self.http_object_resolver = http_object_resolver
 
     def do(self):
         logger.info("Resolving directories...")
-        to_parse_paths = self.directory_resolver.resolve()
+        http_objects, exception_count = self.http_object_resolver.resolve()
         logger.info("Directories resolved!")
-
-        logger.info("Parsing and get http objects...")
-        http_objects, exception_count = self._get_all_http_objects(to_parse_paths)
-        logger.info("Http objects parsed!")
 
         cache_type_counts = {
             ObjectHeaderGroup.WITHOUT_CACHE_HEADERS: 0,

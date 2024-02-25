@@ -1,4 +1,12 @@
+import os
+import logging
+from typing import Tuple, List
+
 from matplotlib import pyplot as plt
+
+from http_object import HTTPObject
+
+logger = logging.getLogger(__name__)
 
 
 def save_kv_file(data: dict, path):
@@ -65,3 +73,23 @@ def plot_max_age_cdf(max_age_count_hours: dict):
                         hspace=0.4)
     plt.savefig(fname='max-age-cdf.jpg')
     plt.show()
+
+
+def get_http_objects_from_paths(to_parse_paths) -> Tuple[List[HTTPObject], int]:
+    http_objects: List[HTTPObject] = []
+    exception_count = 0
+    for root_path in to_parse_paths:
+        logger.info("Exporting http_objects of %s", root_path)
+        for path in os.listdir(root_path):
+            path = f"{root_path}/{path}"
+            with open(path, "rb", encoding=None) as f:
+                headers = f.read().decode('unicode_escape', errors='ignore').split('\r\n\r\n')[0].split("\r\n")[1:]
+            try:
+                http_object = HTTPObject(headers)
+            except Exception as e:
+                logger.error("Failed to parse headers for file %s with error %s. with headers\n%s", path, str(e),
+                             headers)
+                exception_count += 1
+                continue
+            http_objects.append(http_object)
+    return http_objects, exception_count

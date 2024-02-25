@@ -3,8 +3,8 @@ import logging
 import os.path
 
 from site_list_providers import AlexaScraperSiteList, StaticWebsiteList
-from directory_resolver import WalkerDirectoryResolver, DownloaderDirectoryResolver
-from downloader import Wget, AsyncWget
+from directory_resolver import WalkerDirectoryResolver, DownloaderObjectResolver
+from downlaoder.wget import Wget, AsyncWget
 from interfaces import SiteList
 from stats import Statistics
 
@@ -17,11 +17,11 @@ logging.basicConfig(filename='stats.log', filemode='w', level=logging.INFO)
 
 
 def get_async_downloader_resolver(path: str, website_list_provider: SiteList):
-    return DownloaderDirectoryResolver(AsyncWget(path), website_list_provider)
+    return DownloaderObjectResolver(AsyncWget(path), website_list_provider)
 
 
 def get_downloader_resolver(path: str, website_list_provider: SiteList):
-    return DownloaderDirectoryResolver(Wget(path), website_list_provider)
+    return DownloaderObjectResolver(Wget(path), website_list_provider)
 
 
 def get_walker_resolver(path: str):
