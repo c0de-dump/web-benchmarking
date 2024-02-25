@@ -15,7 +15,7 @@ class AlexaScraperSiteList(SiteList):
         for tr in table_body.find_all('tr'):
             tds = tr.find_all('td')
             website = str(tds[2].find('a').contents[0]).strip()
-            output.append(website)
+            output.append(f"https://{website}")
         return output
 
     def get_list(self):
