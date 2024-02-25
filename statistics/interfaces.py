@@ -1,5 +1,7 @@
 import abc
-from typing import List
+from typing import List, Tuple
+
+from http_object import HTTPObject
 
 
 class SiteList(metaclass=abc.ABCMeta):
@@ -13,5 +15,5 @@ class Downloader(metaclass=abc.ABCMeta):
 
 
 class HTTPObjectResolver(metaclass=abc.ABCMeta):
-    def resolve(self) -> List[str]:
+    def resolve(self) -> Tuple[List[HTTPObject], int]:
         raise NotImplementedError
