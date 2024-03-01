@@ -79,7 +79,11 @@ class FirefoxSeleniumObjectResolver(HTTPObjectResolver):
 
         for site in site_list:
             logger.info("requesting to %s", site)
-            driver.get(site)
+            try:
+                driver.get(site)
+            except Exception as e:
+                logger.error(f"fetching site {site} failed because %s", str(e))
+                continue
             for request in driver.requests:
                 if not request.response or not request.response.headers:
                     exception_count += 1
@@ -92,6 +96,7 @@ class FirefoxSeleniumObjectResolver(HTTPObjectResolver):
                 except Exception as e:
                     exception_count += 1
                     logger.warning("exception occurred in eliciting object of site %s\n%s", request.host, str(e))
+            del driver.requests
 
         driver.close()
 
