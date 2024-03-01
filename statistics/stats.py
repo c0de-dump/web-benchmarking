@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 from typing import List, Tuple
@@ -10,10 +11,22 @@ from utils import save_kv_file, plot_max_age_cdf
 logger = logging.getLogger(__name__)
 
 
+def time_logger(func):
+    def _inner(*args, **kwargs):
+        before = datetime.datetime.now()
+        o = func(*args, **kwargs)
+        after = datetime.datetime.now()
+        logger.info("executing %s takes %s seconds", str(func.__name__), str((after - before).seconds))
+        return o
+
+    return _inner
+
+
 class Statistics:
     def __init__(self, http_object_resolver: HTTPObjectResolver):
         self.http_object_resolver = http_object_resolver
 
+    @time_logger
     def do(self):
         logger.info("Resolving directories...")
         http_objects, exception_count = self.http_object_resolver.resolve()
