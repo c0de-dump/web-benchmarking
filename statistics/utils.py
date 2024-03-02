@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 def save_kv_file(data: dict, path):
-    header = ','.join(map(str, data.keys()))
-    row = ','.join(map(str, data.values()))
+    header = "key,value"
+    row = '\n'.join(f"{k},{v}" for k, v in data.items())
     with open(path, 'w+') as f:
         f.write('\n'.join((header, row)))
 
