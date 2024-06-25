@@ -27,25 +27,32 @@ class LoadTesterController:
     def calculate_and_plot(self):
         stats = self.calculate()
 
-        fig, axs = plt.subplots(len(stats), 1, figsize=(12, 8))
-        if len(stats) == 1:
+        # Initialize the plot
+        num_websites = len(stats)
+        fig, axs = plt.subplots(num_websites, max(len(stats) for stats in stats.values()),
+                                figsize=(15, 8 * num_websites))
+
+        if num_websites == 1:
             axs = [axs]
 
-        for i, (website, stats) in enumerate(stats.items()):
-            ax = axs[i]
-            ax.set_title(website)
+        for i, (website, network_conditions) in enumerate(stats.items()):
+            if len(network_conditions) == 1:
+                axs[i] = [axs[i]]
 
-            for network_condition, methods in stats.items():
+            for j, (network_condition, methods) in enumerate(network_conditions.items()):
+                ax = axs[i][j]
+                ax.set_title(f"{website}\n{network_condition}")
+
                 for method, values in methods.items():
                     sorted_keys = sorted(values.keys(), key=int)
                     sorted_values = [values[key] for key in sorted_keys]
 
-                    ax.plot(sorted_keys, sorted_values, label=f"{network_condition} - {method}")
+                    ax.plot(sorted_keys, sorted_values, label=method)
 
-            ax.set_xlabel('Key')
-            ax.set_ylabel('Value')
-            ax.legend()
-            ax.grid(True)
+                ax.set_xlabel('Key')
+                ax.set_ylabel('Value')
+                ax.legend()
+                ax.grid(True)
 
         plt.tight_layout()
         plt.show()

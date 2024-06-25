@@ -134,7 +134,7 @@ class ClassicLoadTester(LoadTester):
         i = 0
         while i <= len(time_points_days):
             key = output_keys.pop(0)
-            print(f"calculate {key}...")
+            print(f"calculate {key} ...")
 
             driver = self._get_driver()
             self._set_network_condition(driver)
@@ -167,7 +167,7 @@ class CacheV2LoadTester(LoadTester):
         output = {}
         for _ in range(len(time_points_days) + 1):
             key = output_keys.pop(0)
-            print(f"calculate {key}...")
+            print(f"calculate {key} ...")
 
             driver = self._get_driver()
             driver.request_interceptor = chain_request_interceptors([
