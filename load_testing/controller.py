@@ -49,8 +49,8 @@ class LoadTesterController:
 
                     ax.plot(sorted_keys, sorted_values, label=method)
 
-                ax.set_xlabel('Key')
-                ax.set_ylabel('Value')
+                ax.set_xlabel('Number of days passed')
+                ax.set_ylabel('Page load time (ms)')
                 ax.legend()
                 ax.grid(True)
 
