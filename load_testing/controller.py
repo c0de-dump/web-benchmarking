@@ -94,6 +94,7 @@ class LoadTesterController:
                 ax_enhancement.grid(True)
 
         plt.tight_layout()
+        plt.savefig('evaluate.png')
         plt.show()
 
     def calculate(self):
