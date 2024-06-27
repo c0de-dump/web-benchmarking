@@ -1,5 +1,6 @@
 import datetime
 import subprocess
+import os
 
 
 class TimeFaker:
@@ -15,7 +16,7 @@ class TimeFaker:
     @classmethod
     def _set_time(cls, t: datetime):
         formatted_time = t.strftime('%Y-%m-%d %H:%M:%S')
-        ps = subprocess.Popen(('echo', "123321password"), stdout=subprocess.PIPE)
+        ps = subprocess.Popen(('echo', os.environ['CHANGE_TIME_PASSWORD']), stdout=subprocess.PIPE)
         subprocess.run(['sudo', '-S', 'date', '-s', formatted_time], stdin=ps.stdout)
 
     @classmethod
