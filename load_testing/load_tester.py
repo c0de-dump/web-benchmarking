@@ -1,10 +1,14 @@
 import dataclasses
 import os.path
 import shutil
+import datetime
+
 from datetime import datetime, timedelta
 
 from selenium.webdriver.support.wait import WebDriverWait
 from seleniumwire.webdriver import Chrome, ChromeOptions
+
+from load_testing.time_faker import TimeFaker
 
 
 @dataclasses.dataclass
@@ -51,27 +55,6 @@ def chain_request_interceptors(interceptors):
     return chain
 
 
-def get_response_interceptor(lower_bound):
-    def intercept_response(req, res):
-        cache_control = res.headers['cache-control']
-        if not cache_control:
-            return
-        for cache_control_val in cache_control.replace(" ", "").split(","):
-            if 'max-age' not in cache_control_val:
-                continue
-            try:
-                _, max_age = cache_control_val.split('=')
-            except Exception as e:
-                print(e, req.url, cache_control_val)
-                continue
-            max_age = int(max_age)
-            if max_age < lower_bound:
-                del res.headers['cache-control']
-                res.headers['cache-control'] = 'no-cache'
-
-    return intercept_response
-
-
 class LoadTester:
     PROFILE_PATH = "./profile1"
 
@@ -113,11 +96,25 @@ class LoadTester:
         driver.get(website)
         after = datetime.now()
 
+        print(after - before)
+
         return int((after - before).total_seconds() * 1000)  # mili
 
     @classmethod
     def _get_time_points(cls):
-        return [366, 200, 93, 32, 15, 8, 5, 2, 1, 0]
+        # return [366, 200, 93, 32, 15, 8, 5, 2, 1, 0]
+        return [0, 1, 2, 5, 8, 15, 32, 93, 200, 366]
+
+    @classmethod
+    def _get_time_deltas(cls):
+        return [
+            timedelta(minutes=1),
+            timedelta(hours=1),
+            timedelta(hours=6),
+            timedelta(days=1),
+            timedelta(days=7),
+            timedelta(days=366),
+        ]
 
 
 class ClassicLoadTester(LoadTester):
@@ -125,32 +122,45 @@ class ClassicLoadTester(LoadTester):
     def name(cls):
         return "ClassicLoadTester"
 
+    @classmethod
+    def _get_driver(cls):
+        options = ChromeOptions()
+        options.add_argument(f"user-data-dir={cls.PROFILE_PATH}")
+        options.add_argument("--headless")
+
+        driver = Chrome(options=options)
+
+        WebDriverWait(driver, 60).until(
+            lambda dr: dr.execute_script('return document.readyState') == 'complete')
+
+        return driver
+
     def calculate_load_time(self, website):
-        time_points_days = sorted(self._get_time_points(), reverse=True)
-        output_keys = ["-1", *list(map(lambda p: str(p), self._get_time_points()))]
-        print("All keys are ", output_keys)
-
         output = {}
-        i = 0
-        while i <= len(time_points_days):
-            key = output_keys.pop(0)
-            print(f"calculate {key} ...")
 
+        driver = self._get_driver()
+
+        self._set_network_condition(driver)
+        driver.request_interceptor = get_request_interceptor()
+
+        stat = self.visit_site_and_get_stats(driver, website)
+
+        time_faker = TimeFaker(datetime.now())
+
+        driver.quit()
+
+        for delta in self._get_time_deltas():
             driver = self._get_driver()
             self._set_network_condition(driver)
             driver.request_interceptor = get_request_interceptor()
 
-            if i != len(time_points_days):
-                next_days_passed = time_points_days[i]
-                driver.response_interceptor = get_response_interceptor(next_days_passed * 24 * 60 * 60)
-
+            time_faker.move_time_till(delta)
             stat = self.visit_site_and_get_stats(driver, website)
-
-            output[key] = stat
+            output[str(int(delta.total_seconds()))] = stat
 
             driver.quit()
-            i += 1
 
+        time_faker.reset_time()
         return output
 
 
@@ -160,26 +170,34 @@ class CacheV2LoadTester(LoadTester):
         return "CacheV2LoadTester"
 
     def calculate_load_time(self, website):
-        time_points_days = self._get_time_points()
-        output_keys = ["-1", *reversed(list(map(lambda p: str(p), time_points_days)))]
-        print("All keys are ", output_keys)
-
         output = {}
-        for _ in range(len(time_points_days) + 1):
-            key = output_keys.pop(0)
-            print(f"calculate {key} ...")
 
+        interceptor = chain_request_interceptors([
+            get_cache_v2_enable_request_interceptor(),
+            get_request_interceptor(),
+        ])
+
+        driver = self._get_driver()
+        self._set_network_condition(driver)
+
+        driver.request_interceptor = interceptor
+
+        stat = self.visit_site_and_get_stats(driver, website)
+
+        time_faker = TimeFaker(datetime.now())
+
+        driver.quit()
+
+        for delta in self._get_time_deltas():
             driver = self._get_driver()
-            driver.request_interceptor = chain_request_interceptors([
-                get_cache_v2_enable_request_interceptor(),
-                get_request_interceptor(),
-            ]
-            )
             self._set_network_condition(driver)
-            stat = self.visit_site_and_get_stats(driver, website)
+            driver.request_interceptor = interceptor
 
-            output[key] = stat
+            time_faker.move_time_till(delta)
+            stat = self.visit_site_and_get_stats(driver, website)
+            output[str(int(delta.total_seconds()))] = stat
 
             driver.quit()
 
+        time_faker.reset_time()
         return output
