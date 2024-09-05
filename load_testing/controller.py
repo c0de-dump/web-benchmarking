@@ -5,12 +5,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from load_testing.load_tester import ClassicLoadTester, CacheV2LoadTester, LoadTester, NetworkCondition
+from shared.logging import logger
 
 
 class LoadTesterController:
-    def __init__(self, website_list, repeats=1):
+    def __init__(self, website_list, chrome, repeats=1):
         self.repeats = repeats
         self.website_list = website_list
+        self.chrome = chrome
 
     @classmethod
     def network_conditions(cls):
@@ -103,7 +105,7 @@ class LoadTesterController:
         for website in self.website_list:
             for cond in self.network_conditions():
                 for load_tester in self.load_testers():
-                    print(
+                    logger.warning(
                         f"Calculate load time test for {website} "
                         f"with network condition {cond} "
                         f"by {load_tester.name()}")
@@ -124,7 +126,7 @@ class LoadTesterController:
 
         for i in range(self.repeats):
             load_tester = load_tester_class(condition)
-            stats = load_tester.calculate_load_time(website)
+            stats = load_tester.calculate_load_time(self.chrome, website)
             for stat_key, stat in stats.items():
                 prev_stat = average_dict.get(stat_key, 0)
                 average_dict[stat_key] = (prev_stat * i + stat) / (i + 1)

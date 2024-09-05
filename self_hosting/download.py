@@ -1,9 +1,10 @@
 import asyncio
 import os
 import shutil
+import pathlib
 from typing import List
 
-from self_hosting.wget import AsyncWget
+from wget import Wget
 
 
 def generate_caddy_file(pairs, path):
@@ -76,7 +77,7 @@ def concat_paths(p1, p2):
 def self_host(website: str, caddy_serve_dir: str, caddyfile_path="./Caddyfile"):
     download_dir = "downloads"
 
-    downloader = AsyncWget(download_dir)
+    downloader = Wget(download_dir)
     directory = downloader.download(website)
     pairs = parse_responses(directory)
     normalize_pair_paths(pairs, download_dir)
@@ -85,8 +86,7 @@ def self_host(website: str, caddy_serve_dir: str, caddyfile_path="./Caddyfile"):
     write_output_file(caddyfile, caddyfile_path)
 
     website_files_path = concat_paths(caddy_serve_dir, directory.replace(download_dir, ""))
-    if not os.path.exists(website_files_path):
-        os.mkdir(website_files_path)
+    pathlib.Path(website_files_path).mkdir(parents=True, exist_ok=True)
 
     write_files_to_serve(caddy_serve_dir, pairs)
 
@@ -97,7 +97,7 @@ def self_host(website: str, caddy_serve_dir: str, caddyfile_path="./Caddyfile"):
 
 
 async def main():
-    downloader = AsyncWget("downloads")
+    downloader = Wget("downloads")
     directory = downloader.download("https://google.com/")
     pairs = parse_responses(directory)
     caddyfile = generate_caddy_file(pairs, "/home/divar/websites")

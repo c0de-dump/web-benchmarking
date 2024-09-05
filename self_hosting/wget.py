@@ -1,24 +1,18 @@
-import asyncio
-import logging
-import re
+from shared.logging import logger
 import subprocess
 
-from statistics.exceptions import DownloadFailedException
+from shared.exceptions import DownloadFailedException
+from shared.normalizer import get_website_name_from_url
 
-logger = logging.getLogger(__name__)
 
-
-class AsyncWget:
+class Wget:
     TIMEOUT = 2 * 60
 
     def __init__(self, output_dir: str):
         self.output_dir = output_dir
 
     def get_output_directory_name(self, url):
-        match = re.search(
-            "^((http|https)://)?(www\\.)?(?P<website_name>[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)*)\\.[a-zA-Z0-9_-]+/?$", url)
-        website_name = match.group("website_name")
-        return f"{self.output_dir}/{website_name}"
+        return f"{self.output_dir}/{get_website_name_from_url(url)}"
 
     def download(self, url: str) -> str:
         output_directory = self.get_output_directory_name(url)

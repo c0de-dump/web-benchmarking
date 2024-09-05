@@ -23,7 +23,7 @@ def main():
     input("Press enter after placing caddyfile (If you didn't pass -cfp) restarting caddy to start evaluation!")
 
     print("Evaluating...")
-    LoadTesterController([f"http://localhost{website_name}"], args.repeats).calculate_and_plot()
+    LoadTesterController([f"http://localhost{website_name}"], "", args.repeats).calculate_and_plot()
 
 
 if __name__ == '__main__':

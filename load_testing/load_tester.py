@@ -2,13 +2,16 @@ import dataclasses
 import os.path
 import shutil
 import datetime
+from csv import excel
 
 from datetime import datetime, timedelta
 
 from selenium.webdriver.support.wait import WebDriverWait
 from seleniumwire.webdriver import Chrome, ChromeOptions
+from selenium.webdriver import ChromeService
 
 from load_testing.time_faker import TimeFaker
+from shared.logging import logger
 
 
 @dataclasses.dataclass
@@ -59,12 +62,15 @@ class LoadTester:
     PROFILE_PATH = "./profile1"
 
     @classmethod
-    def _get_driver(cls):
+    def _get_driver(cls, chrome_path):
         options = ChromeOptions()
         options.add_argument(f"user-data-dir={cls.PROFILE_PATH}")
+        options.binary_location = chrome_path
+        options.add_argument("-–disable-gpu")
         options.add_argument("--headless")
+        options.add_argument('--no-sandbox')
 
-        driver = Chrome(options=options)
+        driver = Chrome(service=ChromeService(executable_path='/usr/local/bin/chromedriver'), options=options, seleniumwire_options={"request_storage": "memory"})
 
         WebDriverWait(driver, 60).until(
             lambda dr: dr.execute_script('return document.readyState') == 'complete')
@@ -76,7 +82,7 @@ class LoadTester:
         if os.path.exists(self.PROFILE_PATH):
             shutil.rmtree(self.PROFILE_PATH)
 
-    def calculate_load_time(self, website):
+    def calculate_load_time(self, chrome, website):
         raise NotImplementedError
 
     @classmethod
@@ -96,7 +102,7 @@ class LoadTester:
         driver.get(website)
         after = datetime.now()
 
-        print(after - before)
+        logger.info(after - before)
 
         return int((after - before).total_seconds() * 1000)  # mili
 
@@ -122,23 +128,23 @@ class ClassicLoadTester(LoadTester):
     def name(cls):
         return "ClassicLoadTester"
 
-    @classmethod
-    def _get_driver(cls):
-        options = ChromeOptions()
-        options.add_argument(f"user-data-dir={cls.PROFILE_PATH}")
-        options.add_argument("--headless")
+    # @classmethod
+    # def _get_driver(cls):
+    #     options = ChromeOptions()
+    #     options.add_argument(f"user-data-dir={cls.PROFILE_PATH}")
+    #     options.add_argument("--headless")
+    #
+    #     driver = Chrome(options=options)
+    #
+    #     WebDriverWait(driver, 60).until(
+    #         lambda dr: dr.execute_script('return document.readyState') == 'complete')
+    #
+    #     return driver
 
-        driver = Chrome(options=options)
-
-        WebDriverWait(driver, 60).until(
-            lambda dr: dr.execute_script('return document.readyState') == 'complete')
-
-        return driver
-
-    def calculate_load_time(self, website):
+    def calculate_load_time(self, chrome, website):
         output = {}
 
-        driver = self._get_driver()
+        driver = self._get_driver(chrome)
 
         self._set_network_condition(driver)
         driver.request_interceptor = get_request_interceptor()
@@ -150,11 +156,12 @@ class ClassicLoadTester(LoadTester):
         driver.quit()
 
         for delta in self._get_time_deltas():
-            driver = self._get_driver()
+            driver = self._get_driver(chrome)
             self._set_network_condition(driver)
             driver.request_interceptor = get_request_interceptor()
 
             time_faker.move_time_till(delta)
+            logger.error("now is: " + str(datetime.now()))
             stat = self.visit_site_and_get_stats(driver, website)
             output[str(int(delta.total_seconds()))] = stat
 
@@ -169,7 +176,7 @@ class CacheV2LoadTester(LoadTester):
     def name(cls):
         return "CacheV2LoadTester"
 
-    def calculate_load_time(self, website):
+    def calculate_load_time(self, chrome, website):
         output = {}
 
         interceptor = chain_request_interceptors([
@@ -177,7 +184,7 @@ class CacheV2LoadTester(LoadTester):
             get_request_interceptor(),
         ])
 
-        driver = self._get_driver()
+        driver = self._get_driver(chrome)
         self._set_network_condition(driver)
 
         driver.request_interceptor = interceptor
@@ -189,11 +196,12 @@ class CacheV2LoadTester(LoadTester):
         driver.quit()
 
         for delta in self._get_time_deltas():
-            driver = self._get_driver()
+            driver = self._get_driver(chrome)
             self._set_network_condition(driver)
             driver.request_interceptor = interceptor
 
             time_faker.move_time_till(delta)
+            logger.error("now is: " + str(datetime.now()))
             stat = self.visit_site_and_get_stats(driver, website)
             output[str(int(delta.total_seconds()))] = stat
 
