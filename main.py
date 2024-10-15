@@ -71,5 +71,5 @@ def main():
 
 
 if __name__ == "__main__":
-    controller = LoadTesterController(["http://localhost/varzesh3/"], 3)
+    controller = LoadTesterController(["http://localhost/varzesh3/"], '/usr/bin/google-chrome', 1)
     print(controller.calculate_and_plot())

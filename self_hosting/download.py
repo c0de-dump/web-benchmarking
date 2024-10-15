@@ -9,12 +9,17 @@ from wget import Wget
 
 def generate_caddy_file(pairs, path):
     headers = "\n".join([pair.generate_caddy_style_headers() for pair in pairs])
-    return f"""http://localhost:80 {{
-    root * {path}
+    return f"""{{
+    auto_https off
+}}
+    http://*:80 {{
+    root * /tmp/storage/
     file_server
+    bind 0.0.0.0
+    {headers}
+}}
 
-{headers}
-}}"""
+"""
 
 
 class HeadersResponsePair:
