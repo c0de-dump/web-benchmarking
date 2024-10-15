@@ -4,13 +4,25 @@ This project contains files to evaluate and benchmark normal and modified cache 
 
 ## How to
 
-To download a website and evaluate modified version:
-1. export `CHANGE_TIME_PASSWORD` variable with sudo password value. `export CHANGE_TIME_PASSWORD=<password>` 
-2. run `python startup/startup.py -sp /home/divar/websites -cfp /home/divar/Personal/Projects/caddy-cache/caddy/Caddyfile http://google.com/`
-3. after downloading website, terminal wants you to restart caddy server and press enter.
-4. file `evaluate.png` creates under current directory, and you can see statistics.
+We have 3 parts. Download a website, Serve it in webserver and measure site loading time.
+```bash
+# Build Docker images
+sudo docker build . -t loadtest:v1 --target=load_testing # Run in web-benchmarking project
+sudo docker build . -t selfhosting:v1 --target=self_hosting # Run in web-benchmarking project
+sudo docker build . -t caddy:v1 # Run in modified caddy project
+sudo docker volume create selfhosting # Use for sharing data between site downloader and caddy
+sudo docker volume create loadtesting # Use for saving evaluation metrics.
 
-### Note
+# Clone a website
+sudo docker run -v selfhosting:/tmp/storage selfhosting:v1 <WEBSITE_TO_DOWNLOAD: ex) https://www.varzesh3.com/> -sp /tmp/storage/ -cfp /tmp/storage/Caddyfile
 
-Sudo password required for changing time to simulate time passing.
-After ending process, time will set to `sync with server`. But you can manually run `timedatectl set-ntp 1`
+# Run webserver
+sudo docker run -v selfhosting:/tmp/storage --name caddy -d caddy:v1
+
+# Run load tester
+- sudo docker run --memory=4g --network=container:caddy -v loadtesting:/tmp/result loadtest:v1 http://localhost/<SITE_NAME_WITHOUT_DOMAIN: ex) varzesh3>/
+```
+Now you can see result as a png picture in the following path:
+```
+/var/lib/docker/volumes/loadtesting/_data/evaluate.png
+```
