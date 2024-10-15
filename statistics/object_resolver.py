@@ -4,15 +4,13 @@ import os
 import time
 from typing import List, Tuple
 
-from exceptions import DownloadFailedException
+from shared.exceptions import DownloadFailedException
 from interfaces import HTTPObjectResolver, Downloader, SiteList
 from http_object import HTTPObject
 from utils import get_http_objects_from_paths
 
 from seleniumwire.webdriver import Firefox, FirefoxOptions
 from selenium.webdriver import FirefoxService
-
-logger = logging.getLogger(__name__)
 
 
 class DownloaderObjectResolver(HTTPObjectResolver):

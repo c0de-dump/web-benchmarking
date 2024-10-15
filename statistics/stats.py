@@ -1,15 +1,9 @@
 import datetime
-import logging
-import os
-from typing import List, Tuple
+from shared.logging import logger
 
 from consts import ObjectHeaderGroup
-from http_object import HTTPObject
 from interfaces import HTTPObjectResolver
 from utils import save_kv_file, plot_max_age_cdf
-
-logger = logging.getLogger(__name__)
-
 
 def time_logger(func):
     def _inner(*args, **kwargs):
