@@ -5,7 +5,6 @@ from shared.logging import logger
 
 
 def main():
-    logger.error("mahmood")
     parser = argparse.ArgumentParser()
     parser.add_argument("target", help=f"Which url you want monitor it.")
     parser.add_argument(

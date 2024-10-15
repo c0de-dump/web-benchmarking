@@ -2,7 +2,6 @@ import dataclasses
 import os.path
 import shutil
 import datetime
-from csv import excel
 
 from datetime import datetime, timedelta
 
@@ -69,6 +68,7 @@ class LoadTester:
         options.add_argument("-–disable-gpu")
         options.add_argument("--headless")
         options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
 
         driver = Chrome(service=ChromeService(executable_path='/usr/local/bin/chromedriver'), options=options, seleniumwire_options={"request_storage": "memory"})
 
@@ -102,14 +102,7 @@ class LoadTester:
         driver.get(website)
         after = datetime.now()
 
-        logger.info(after - before)
-
         return int((after - before).total_seconds() * 1000)  # mili
-
-    @classmethod
-    def _get_time_points(cls):
-        # return [366, 200, 93, 32, 15, 8, 5, 2, 1, 0]
-        return [0, 1, 2, 5, 8, 15, 32, 93, 200, 366]
 
     @classmethod
     def _get_time_deltas(cls):
@@ -128,19 +121,6 @@ class ClassicLoadTester(LoadTester):
     def name(cls):
         return "ClassicLoadTester"
 
-    # @classmethod
-    # def _get_driver(cls):
-    #     options = ChromeOptions()
-    #     options.add_argument(f"user-data-dir={cls.PROFILE_PATH}")
-    #     options.add_argument("--headless")
-    #
-    #     driver = Chrome(options=options)
-    #
-    #     WebDriverWait(driver, 60).until(
-    #         lambda dr: dr.execute_script('return document.readyState') == 'complete')
-    #
-    #     return driver
-
     def calculate_load_time(self, chrome, website):
         output = {}
 
@@ -150,7 +130,6 @@ class ClassicLoadTester(LoadTester):
         driver.request_interceptor = get_request_interceptor()
 
         stat = self.visit_site_and_get_stats(driver, website)
-
         time_faker = TimeFaker(datetime.now())
 
         driver.quit()
