@@ -1,0 +1,7 @@
+requests==2.31.0
+pandas
+matplotlib
+beautifulsoup4
+selenium
+selenium-wire
+blinker<1.8.0
