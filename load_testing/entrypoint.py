@@ -14,6 +14,7 @@ def main():
     )
     parser.add_argument(
         "-r", "--repeats",
+        type=int,
         help="request count to same page to calculate resposne time by averaging them.",
         default=1,
     )

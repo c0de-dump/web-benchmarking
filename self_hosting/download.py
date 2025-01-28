@@ -13,7 +13,7 @@ def generate_caddy_file(pairs, path):
     auto_https off
 }}
     http://*:80 {{
-    root * /tmp/storage/
+    root * {path}
     file_server
     bind 0.0.0.0
     {headers}

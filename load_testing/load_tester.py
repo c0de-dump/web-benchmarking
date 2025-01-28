@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 
 from selenium.webdriver.support.wait import WebDriverWait
 from seleniumwire.webdriver import Chrome, ChromeOptions
-from selenium.webdriver import ChromeService
 
 from load_testing.time_faker import TimeFaker
 from shared.logging import logger
@@ -69,8 +68,7 @@ class LoadTester:
         options.add_argument("--headless")
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
-
-        driver = Chrome(service=ChromeService(executable_path='/usr/local/bin/chromedriver'), options=options, seleniumwire_options={"request_storage": "memory"})
+        driver = Chrome(options=options, seleniumwire_options={"request_storage": "memory"})
 
         WebDriverWait(driver, 60).until(
             lambda dr: dr.execute_script('return document.readyState') == 'complete')
@@ -180,7 +178,7 @@ class CacheV2LoadTester(LoadTester):
             driver.request_interceptor = interceptor
 
             time_faker.move_time_till(delta)
-            logger.error("now is: " + str(datetime.now()))
+            logger.info("now is: " + str(datetime.now()))
             stat = self.visit_site_and_get_stats(driver, website)
             output[str(int(delta.total_seconds()))] = stat
 

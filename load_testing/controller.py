@@ -9,7 +9,7 @@ from shared.logging import logger
 
 
 class LoadTesterController:
-    def __init__(self, website_list, chrome, repeats=1):
+    def __init__(self, website_list, chrome, repeats=3):
         self.repeats = repeats
         self.website_list = website_list
         self.chrome = chrome
@@ -33,8 +33,8 @@ class LoadTesterController:
     @classmethod
     def load_testers(cls):
         return [
-            CacheV2LoadTester,
             ClassicLoadTester,
+            CacheV2LoadTester,
         ]
 
     def log_stats(self, stats):
@@ -96,7 +96,7 @@ class LoadTesterController:
                 ax_enhancement.grid(True)
 
         plt.tight_layout()
-        plt.savefig('/tmp/result/evaluate.png')
+        plt.savefig('./evaluate.png')
 
     def calculate(self):
         output = {}
@@ -121,13 +121,23 @@ class LoadTesterController:
         return output
 
     def _calc(self, load_tester_class: Type[LoadTester], condition: NetworkCondition, website):
-        average_dict = {}
+        median_dict = {}
 
         for i in range(self.repeats):
+            logger.info(f"Repeat: {i}")
             load_tester = load_tester_class(condition)
             stats = load_tester.calculate_load_time(self.chrome, website)
-            for stat_key, stat in stats.items():
-                prev_stat = average_dict.get(stat_key, 0)
-                average_dict[stat_key] = (prev_stat * i + stat) / (i + 1)
 
-        return average_dict
+            for stat_key, stat in stats.items():
+                prev_stat = median_dict.get(stat_key, [])
+                median_dict[stat_key] = prev_stat + [stat]
+        result = {}
+        for key, stats in median_dict.items():
+            sorted_stats = sorted(stats)
+            if (l := len(sorted_stats))%2==0:
+                median = (sorted_stats[l//2-1] + sorted_stats[l//2]) // 2
+            else:
+                median = sorted_stats[l//2]
+            result[key] = median
+
+        return result
