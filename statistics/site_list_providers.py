@@ -14,14 +14,15 @@ class AlexaScraperSiteList(SiteList):
         table_body = main_table.find('tbody')
         for tr in table_body.find_all('tr'):
             tds = tr.find_all('td')
-            website = str(tds[2].find('a').contents[0]).strip()
+            website = str(tds[2].find('a').contents[1]).strip()
             output.append(f"https://{website}")
         return output
 
     def get_list(self):
-        urls = ["https://ahrefs.com/top"] + [
-            f"https://ahrefs.com/top/{i}" for i in range(2, 10 + 1)
-        ]
+        urls = ["https://ahrefs.com/top"] 
+        # + [
+        #     f"https://ahrefs.com/top/{i}" for i in range(2, 10 + 1)
+        # ]
 
         websites = []
         for url in urls:
