@@ -10,7 +10,10 @@ from seleniumwire.webdriver import Chrome, ChromeOptions
 
 from load_testing.time_faker import TimeFaker
 from shared.logging import logger
+import logging
 
+_logger = logging.getLogger('seleniumwire')
+_logger.setLevel(logging.FATAL)
 
 @dataclasses.dataclass
 class NetworkCondition:
