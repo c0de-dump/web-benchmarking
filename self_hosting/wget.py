@@ -22,8 +22,10 @@ class Wget:
                     "wget",
                     "--timeout=10",
                     "--tries=3",
-                    "--quiet",
+                    # "--quiet",
                     "--no-check-certificate",
+                    "--content-on-error",
+                    "--restrict-file-names=nocontrol",
                     "-U"
                     "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0",
                     "-H",
