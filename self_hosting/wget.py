@@ -22,7 +22,7 @@ class Wget:
                     "wget",
                     "--timeout=10",
                     "--tries=3",
-                    # "--quiet",
+                    "--quiet",
                     "--no-check-certificate",
                     "--content-on-error",
                     "--restrict-file-names=nocontrol",
