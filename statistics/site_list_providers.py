@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 
-from interfaces import SiteList
+from statistics.interfaces import SiteList
 
 
 class AlexaScraperSiteList(SiteList):
