@@ -1,9 +1,9 @@
 import datetime
 from shared.logging import logger
 
-from consts import ObjectHeaderGroup
-from interfaces import HTTPObjectResolver
-from utils import save_kv_file, plot_max_age_cdf
+from statistics.consts import ObjectHeaderGroup
+from statistics.interfaces import HTTPObjectResolver
+from statistics.utils import save_kv_file, plot_max_age_cdf
 
 def time_logger(func):
     def _inner(*args, **kwargs):

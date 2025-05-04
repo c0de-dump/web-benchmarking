@@ -4,7 +4,7 @@ import shutil
 import pathlib
 from typing import List
 
-from wget import Wget
+from self_hosting.wget import Wget
 
 
 def generate_caddy_file(pairs, path):
@@ -12,7 +12,7 @@ def generate_caddy_file(pairs, path):
     return f"""{{
     auto_https off
 }}
-    http://*:80 {{
+    http://*:8080 {{
     root * {path}
     file_server
     bind 0.0.0.0

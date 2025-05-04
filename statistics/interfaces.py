@@ -1,7 +1,7 @@
 import abc
 from typing import List, Tuple
 
-from http_object import HTTPObject
+from statistics.http_object import HTTPObject
 
 
 class SiteList(metaclass=abc.ABCMeta):

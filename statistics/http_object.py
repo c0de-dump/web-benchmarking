@@ -1,6 +1,6 @@
 from typing import List
 
-from consts import CACHE_CONTROL, LAST_MODIFIED, EXPIRES, ETAG, CACHE_HEADERS, NO_STORE, MAX_AGE, NO_CACHE, \
+from statistics.consts import CACHE_CONTROL, LAST_MODIFIED, EXPIRES, ETAG, CACHE_HEADERS, NO_STORE, MAX_AGE, NO_CACHE, \
     ObjectHeaderGroup
 
 

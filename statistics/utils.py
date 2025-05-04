@@ -4,7 +4,7 @@ from typing import Tuple, List
 
 from matplotlib import pyplot as plt
 
-from http_object import HTTPObject
+from statistics.http_object import HTTPObject
 
 logger = logging.getLogger(__name__)
 
