@@ -67,7 +67,7 @@ if __name__ == "__main__":
         "-sp",
         "--caddy-serve-path",
         help="Where caddy will serve files.",
-        default="./download",
+        default="./wget_downloads",
     )
 
     parser.add_argument(
