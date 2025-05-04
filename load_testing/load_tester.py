@@ -99,11 +99,20 @@ class LoadTester:
 
     @classmethod
     def visit_site_and_get_stats(cls, driver, website):
-        before = datetime.now()
-        driver.get(website)
-        after = datetime.now()
+        diff = 999_999_999 # fallback value
+        for _ in range(3):
+            try:
+                before = datetime.now()
+                driver.get(website)
+                after = datetime.now()
+                diff = int((after - before).total_seconds() * 1000)  # milliseconds
+                break
+            except Exception as e:
+                logger.error(f"Error loading {website}: {e}")
+                continue
 
-        return int((after - before).total_seconds() * 1000)  # mili
+        logger.info(f"Load time for {website}: {diff} ms")
+        return diff
 
     @classmethod
     def _get_time_deltas(cls):
