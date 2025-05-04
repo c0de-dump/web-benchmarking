@@ -23,6 +23,7 @@ class Wget:
                     "--timeout=10",
                     "--tries=3",
                     "--quiet",
+                    "--no-check-certificate",
                     "-U"
                     "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0",
                     "-H",
