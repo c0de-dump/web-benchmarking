@@ -48,7 +48,7 @@ class LoadTesterController:
     def calculate_and_plot(self):
         stats = self.calculate()
 
-        self.log_stats(stats)
+        # self.log_stats(stats)
 
         # Initialize the plot
         num_websites = len(stats)
@@ -102,7 +102,9 @@ class LoadTesterController:
         output = {}
 
         for website in self.website_list:
+            website_stats = output.get(website, {})
             for cond in self.network_conditions():
+                condition_stats = website_stats.get(cond.name(), {})
                 for load_tester in self.load_testers():
                     logger.warning(
                         f"Calculate load time test for {website} "
@@ -111,12 +113,10 @@ class LoadTesterController:
 
                     load_stats = self._calc(load_tester, cond, website)
 
-                    website_stats = output.get(website, {})
-                    condition_stats = website_stats.get(cond.name(), {})
-
                     condition_stats[load_tester.name()] = load_stats
-                    website_stats[cond.name()] = condition_stats
-                    output[website] = website_stats
+                website_stats[cond.name()] = condition_stats
+            output[website] = website_stats
+            self.log_stats(output)
 
         return output
 

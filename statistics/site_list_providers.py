@@ -5,6 +5,10 @@ from statistics.interfaces import SiteList
 
 
 class AlexaScraperSiteList(SiteList):
+    def __init__(self):
+        super().__init__()
+        self.limit = 50
+
     @classmethod
     def _elicit_website_from_response(cls, res: str):
         output = []
@@ -28,6 +32,8 @@ class AlexaScraperSiteList(SiteList):
         for url in urls:
             res = requests.get(url)
             websites.extend(self._elicit_website_from_response(res.content))
+
+        websites = websites[:self.limit]
 
         return set(websites)
 
