@@ -126,7 +126,14 @@ class LoadTesterController:
         for i in range(self.repeats):
             logger.info(f"Repeat: {i}")
             load_tester = load_tester_class(condition)
-            stats = load_tester.calculate_load_time(self.chrome, website)
+            stats = {}
+            for _ in range(3):
+                try:
+                    stats = load_tester.calculate_load_time(self.chrome, website)
+                    break
+                except Exception as e:
+                    logger.error(f"Error loading {website}: {e}")
+                    continue
 
             for stat_key, stat in stats.items():
                 prev_stat = median_dict.get(stat_key, [])
