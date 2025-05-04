@@ -11,7 +11,7 @@ from statistics.site_list_providers import AlexaScraperSiteList
 
 
 def build_server():
-    subprocess.run("go build -o newcaddy ./cmd/caddy", shell=True, cwd="../server/caddy")
+    subprocess.run("go build -o newcaddy ./cmd/caddy", shell=True, cwd="/users/maxqian/CacheCatalyst/caddy")
 
 def evaluate(website: str, content_path: str, caddyfile_path: str, repeats: int):
     website_name = f"/{get_website_name_from_url(website)}"
@@ -32,7 +32,7 @@ def evaluate(website: str, content_path: str, caddyfile_path: str, repeats: int)
     server = subprocess.Popen(
         f"./newcaddy run --config {caddyfile_path}",
         shell=True,
-        cwd="../server/caddy",
+        cwd="/users/maxqian/CacheCatalyst/caddy",
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         preexec_fn=os.setsid,
