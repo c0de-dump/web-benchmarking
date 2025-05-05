@@ -23,5 +23,7 @@ class TimeFaker:
     #     subprocess.run(['sudo', '-S', 'date', '-s', formatted_time], stdin=ps.stdout)
 
     def reset_time(self):
-        subprocess.run(f"sudo -k systemctl restart ntp", shell=True)
-        sleep(1)
+        # https://askubuntu.com/a/256004
+        subprocess.run(f"sudo service ntp stop", shell=True)
+        subprocess.run(f"sudo ntpd -gq", shell=True)
+        subprocess.run(f"sudo service ntp start", shell=True)
