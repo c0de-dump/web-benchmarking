@@ -23,8 +23,11 @@ def evaluate(website: str, content_path: str, caddyfile_path: str, repeats: int)
         return
 
     try:
-        self_hosting.download.self_host(website, content_path, caddyfile_path)
-        logger.info(f"Website {website} complete downloading.")
+        if os.path.exists(caddyfile_path):
+            logger.info(f"Website {website} already downloaded.")
+        else:
+            self_hosting.download.self_host(website, content_path, caddyfile_path)
+            logger.info(f"Website {website} complete downloading.")
     except Exception as e:
         logger.error(f"Failed to host for {website}: {e}")
         return
